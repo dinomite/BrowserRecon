@@ -1,0 +1,1 @@
+- Strip ^M from the DBs where appropriate (header order, maybe all)
