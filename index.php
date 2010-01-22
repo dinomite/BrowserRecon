@@ -2,6 +2,15 @@
 // Include the browserrecon application
 include('inc_browserrecon.php');
 
+echo "<html><body>\n";
+echo browserRecon(getallHeaders(), 'besthitdetail');
+echo "\n<hr>\n";
+echo browserRecon(getallHeaders(), 'besthitlist');
+echo "\n<hr>\n";
+echo browserRecon(getallHeaders(), 'list');
+echo "\n</body></html>\n";
+
+/*
 // Do the web browser fingerprinting
 $browser = browserRecon(getallheaders());
 
@@ -33,5 +42,4 @@ if($_SERVER['QUERY_STRING'] == 'pic'){
 }else{
     echo $browser;
 }
-
-?>
+*/

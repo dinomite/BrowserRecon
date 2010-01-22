@@ -1,47 +1,44 @@
 <?php
 /*
-+--------------------------------------------------------------------+
-|    browserrecon 1.4-php
-|
-|    (c) 2008 by Marc Ruef
-|    marc.ruef@computec.ch
-|    http://www.computec.ch/projekte/browserrecon/
-|
-|    Released under the terms and conditions of the
-|    GNU General Public License 3.0 (http://gnu.org).
-|
-|    Installation:
-|    Extract the archive in a folder accessible by your
-|    web browser. Include the browserrecon script with
-|    the following function call:
-|        include ('browserrecon/inc_browserrecon.php');
-|
-|    Use:
-|    Use the function browserrecon() to do a web browser
-|    fingerprinting with the included utility. The first
-|    argument of the function call is the raw http headers
-|    sent by the client. You might use the following
-|    call to do a live fingerprinting of visiting users:
-|        echo browserrecon(getfullheaders());
-|
-|    It is also possible to get the data from another
-|    source. For example a local file named header.txt:
-|        echo browserrecon(file_get_contents('header.txt')));
-|
-|    Or the data sent via a http post form:
-|        echo browserrecon($_POST['header']);
-|
-|    Reporting:
-|    You are able to change the behavior of the reports
-|    sent back by browserrecon(). As second argument you
-|    might use the following parameters:
-|        - simple: Identified implementation only
-|        - besthitdetail: Additional hit detail
-|        - list: Unordered list of all matches
-|        - besthitlist: Top ten list of the best matches
-|
-+--------------------------------------------------------------------+
-*/
+ * browserrecon
+ *
+ * (c) 2008 by Marc Ruef
+ * marc.ruef@computec.ch
+ * http://www.computec.ch/projekte/browserrecon/
+ *
+ * Released under the terms and conditions of the
+ * GNU General Public License 3.0 (http://gnu.org).
+ *
+ * Installation:
+ * Extract the archive in a folder accessible by your
+ * web browser. Include the browserrecon script with
+ * the following function call:
+ *     include ('browserrecon/inc_browserrecon.php');
+ *
+ * Use:
+ * Use the function browserrecon() to do a web browser
+ * fingerprinting with the included utility. The first
+ * argument of the function call is the raw http headers
+ * sent by the client. You might use the following
+ * call to do a live fingerprinting of visiting users:
+ *     echo browserrecon(getallheaders());
+ *
+ * It is also possible to get the data from another
+ * source. For example a local file named header.txt:
+ *     echo browserrecon(file_get_contents('header.txt')));
+ *
+ * Or the data sent via a http post form:
+ *     echo browserrecon($_POST['header']);
+ *
+ * Reporting:
+ * You are able to change the behavior of the reports
+ * sent back by browserrecon(). As second argument you
+ * might use the following parameters:
+ *     - simple: Identified implementation only
+ *     - besthitdetail: Additional hit detail
+ *     - list: Unordered list of all matches
+ *     - besthitlist: Top ten list of the best matches
+ */
 
 /**
  * Identify a browser
@@ -53,18 +50,18 @@
 function browserRecon($rawHeaders, $mode='besthit', $database='') {
     $globalFingerprint = identifyGlobalFingerprint($database, $rawHeaders);
     $possibilities = countHitPossibilities($rawHeaders);
-    $matchStatistics = generateMatchStatistics($globalFingerprint, $mode, $possibilities);
+    $matchStatistics = generateMatchStatistics($globalFingerprint);
 
-    return announceFingerprintMatches($matchStatistics);
+    return announceFingerprintMatches($matchStatistics, $mode, $possibilities);
 }
 
 /**
- * Get a comma-separated list of header keys.
+ * Get a comma-separated list of header keys, in the order that the browser
+ * delivered them.
  *
  * @param   string  $rawHeaders  The headers, as returned by getallheaders()
  *
- * @return  string  The header keys, in the order the browser delivered them,
- *                  as a comma-separated list
+ * @return  string  The header keys as a comma-separated list
  */
 function getHeaderOrder($rawHeaders) {
     $order = '';
@@ -110,27 +107,28 @@ function countHitPossibilities($rawHeaders) {
  * Find each of the headers we care about in the databases.
  *
  * @param   string  $database   The database file prefix to use
- * @param   string  $rawHeaders  The headers, as returned by getFullHeaders()
+ * @param   string  $rawHeaders  The headers, as returned by getallheaders()
  *
- * @return  string  Semicolon separated list of browsers that match
+ * @return  string  Array of browsers that match
  */
 function identifyGlobalFingerprint($database, $rawHeaders) {
-    $matchList = findMatchInDatabase($database.'user-agent.fdb', $rawHeaders['User-Agent']);
-    $matchList .= findMatchInDatabase($database.'accept.fdb', $rawHeaders['Accept']);
-    $matchList .= findMatchInDatabase($database.'accept-language.fdb', $rawHeaders['Accept-Language']);
-    $matchList .= findMatchInDatabase($database.'accept-encoding.fdb', $rawHeaders['Accept-Encoding']);
-    $matchList .= findMatchInDatabase($database.'accept-charset.fdb', $rawHeaders['Accept-Charset']);
-    $matchList .= findMatchInDatabase($database.'keep-alive.fdb', $rawHeaders['Keep-Alive']);
-    $matchList .= findMatchInDatabase($database.'connection.fdb', $rawHeaders['Connection']);
-    $matchList .= findMatchInDatabase($database.'cache-control.fdb', $rawHeaders['Cache-Control']);
-    $matchList .= findMatchInDatabase($database.'ua-pixels.fdb', $rawHeaders['UA-Pixels']);
-    $matchList .= findMatchInDatabase($database.'ua-color.fdb', $rawHeaders['UA-Color']);
-    $matchList .= findMatchInDatabase($database.'ua-os.fdb', $rawHeaders['UA-OS']);
-    $matchList .= findMatchInDatabase($database.'ua-cpu.fdb', $rawHeaders['UA-CPU']);
-    $matchList .= findMatchInDatabase($database.'te.fdb', $rawHeaders['TE']);
-    $matchList .= findMatchInDatabase($database.'header-order.fdb', getHeaderOrder($rawHeaders));
+    $matches = array();
+    $matches = combineArrays($matches, findMatchInDatabase($database.'user-agent.fdb', $rawHeaders['User-Agent']));
+    $matches = combineArrays($matches, findMatchInDatabase($database.'accept.fdb', $rawHeaders['Accept']));
+    $matches = combineArrays($matches, findMatchInDatabase($database.'accept-language.fdb', $rawHeaders['Accept-Language']));
+    $matches = combineArrays($matches, findMatchInDatabase($database.'accept-encoding.fdb', $rawHeaders['Accept-Encoding']));
+    $matches = combineArrays($matches, findMatchInDatabase($database.'accept-charset.fdb', $rawHeaders['Accept-Charset']));
+    $matches = combineArrays($matches, findMatchInDatabase($database.'keep-alive.fdb', $rawHeaders['Keep-Alive']));
+    $matches = combineArrays($matches, findMatchInDatabase($database.'connection.fdb', $rawHeaders['Connection']));
+    $matches = combineArrays($matches, findMatchInDatabase($database.'cache-control.fdb', $rawHeaders['Cache-Control']));
+    $matches = combineArrays($matches, findMatchInDatabase($database.'ua-pixels.fdb', $rawHeaders['UA-Pixels']));
+    $matches = combineArrays($matches, findMatchInDatabase($database.'ua-color.fdb', $rawHeaders['UA-Color']));
+    $matches = combineArrays($matches, findMatchInDatabase($database.'ua-os.fdb', $rawHeaders['UA-OS']));
+    $matches = combineArrays($matches, findMatchInDatabase($database.'ua-cpu.fdb', $rawHeaders['UA-CPU']));
+    $matches = combineArrays($matches, findMatchInDatabase($database.'te.fdb', $rawHeaders['TE']));
+    $matches = combineArrays($matches, findMatchInDatabase($database.'header-order.fdb', getHeaderOrder($rawHeaders)));
 
-    return $matchList;
+    return $matches;
 }
 
 /**
@@ -139,11 +137,12 @@ function identifyGlobalFingerprint($database, $rawHeaders) {
  * @param   string  $databaseFile   The DB file to read headers from
  * @param   string  $headerValue    The header from the browser
  *
- * @return  string  Semicolon separated list of browsers that match
+ * @return  array   Array of browsers that match
  */
 function findMatchInDatabase ($databaseFile, $headerValue) {
     // Get the whole database as an array of lines
     $database = file($databaseFile);
+    $matches = array();
 
     foreach($database as $entry) {
         // Lines are "Browser name;header value"
@@ -151,7 +150,7 @@ function findMatchInDatabase ($databaseFile, $headerValue) {
 
         if ($headerValue == rtrim($dbValue)) {
             // Append this browser name to the matches
-            $matches .= $dbBrowser .';';
+            $matches[] = $dbBrowser;
         }
     }
 
@@ -159,16 +158,15 @@ function findMatchInDatabase ($databaseFile, $headerValue) {
 }
 
 /**
- * @param   string  $matchList  Semicolon separated list of browsers that match
+ * @param   array   $matches   Browsers that matched
  *
  * @return  string  Lines with the name of a browser & the number of header matches
  */
-function generateMatchStatistics($matchList) {
-    $matchesArray = explode(';', $matchList);
-    $matches = array_unique($matchesArray);
+function generateMatchStatistics($matches) {
+    $uniqueMatches = array_unique($matches);
 
-    foreach($matches as $match) {
-        $matchStatistic .= $match .'='. countif($matchesArray, $match) ."\n";
+    foreach($uniqueMatches as $match) {
+        $matchStatistic .= $match .'='. countif($matches, $match) ."\n";
     }
 
     return $matchStatistic;
@@ -216,7 +214,7 @@ function announceFingerprintMatches($fullMatchList, $mode='besthit', $hitPossibi
             }
 
             // Store them all in the list of matches
-            $resultList .= $matchName.': '. $matchCount."\n";
+            $resultList .= $matchName.': '. $matchCount."<br>\n";
             $resultArray[] = $matchCount.';'. htmlspecialchars($matchName);
         }
     }
@@ -238,7 +236,7 @@ function announceFingerprintMatches($fullMatchList, $mode='besthit', $hitPossibi
                 $hitList .= ($i+1).'. '.$scan_resultitem['1'].' ('.$scan_hitaccuracy. '% with '.$scan_resultitem['0'].' hits)';
 
                 if ($i<9) {
-                    $hitList .= "\n";
+                    $hitList .= "<br>\n";
                 }
             }
         }
@@ -255,6 +253,17 @@ function announceFingerprintMatches($fullMatchList, $mode='besthit', $hitPossibi
     } else {
         return $bestHitName;
     }
+}
+
+/**
+ * Combine two arrays, without any merging jazz.
+ */
+function combineArrays($one, $two) {
+    foreach ($two as $item) {
+        $one[] = $item;
+    }
+
+    return $one;
 }
 
 //////////////  ONLY USED FOR ADDING FINGERPRINTS  ////////////////
@@ -294,19 +303,19 @@ function sendFingerprint($implementation, $fingerprint, $details='') {
 }
 
 function saveAllFingerprintsToDatabase ($rawHeaders, $implementation) {
-    saveNewFingerprintToDatabase ('scan/user-agent.fdb', $implementation, getHeaderValue($rawHeaders, 'User-Agent'));
-    saveNewFingerprintToDatabase ('scan/accept.fdb', $implementation, getHeaderValue($rawHeaders, 'Accept'));
-    saveNewFingerprintToDatabase ('scan/accept-language.fdb', $implementation, getHeaderValue($rawHeaders, 'Accept-Language'));
-    saveNewFingerprintToDatabase ('scan/accept-encoding.fdb', $implementation, getHeaderValue($rawHeaders, 'Accept-Encoding'));
-    saveNewFingerprintToDatabase ('scan/accept-charset.fdb', $implementation, getHeaderValue($rawHeaders, 'Accept-Charset'));
-    saveNewFingerprintToDatabase ('scan/keep-alive.fdb', $implementation, getHeaderValue($rawHeaders, 'Keep-Alive'));
-    saveNewFingerprintToDatabase ('scan/connection.fdb', $implementation, getHeaderValue($rawHeaders, 'Connection'));
-    saveNewFingerprintToDatabase ('scan/cache-control.fdb', $implementation, getHeaderValue($rawHeaders, 'Cache-Control'));
-    saveNewFingerprintToDatabase ('scan/ua-pixels.fdb', $implementation, getHeaderValue($rawHeaders, 'UA-Pixels'));
-    saveNewFingerprintToDatabase ('scan/ua-color.fdb', $implementation, getHeaderValue($rawHeaders, 'UA-Color'));
-    saveNewFingerprintToDatabase ('scan/ua-os.fdb', $implementation, getHeaderValue($rawHeaders, 'UA-OS'));
-    saveNewFingerprintToDatabase ('scan/ua-cpu.fdb', $implementation, getHeaderValue($rawHeaders, 'UA-CPU'));
-    saveNewFingerprintToDatabase ('scan/te.fdb', $implementation, getHeaderValue($rawHeaders, 'TE'));
+    saveNewFingerprintToDatabase ('scan/user-agent.fdb', $implementation, $rawHeader['User-Agent']);
+    saveNewFingerprintToDatabase ('scan/accept.fdb', $implementation, $rawHeader['Accept']);
+    saveNewFingerprintToDatabase ('scan/accept-language.fdb', $implementation, $rawHeader['Accept-Language']);
+    saveNewFingerprintToDatabase ('scan/accept-encoding.fdb', $implementation, $rawHeader['Accept-Encoding']);
+    saveNewFingerprintToDatabase ('scan/accept-charset.fdb', $implementation, $rawHeader['Accept-Charset']);
+    saveNewFingerprintToDatabase ('scan/keep-alive.fdb', $implementation, $rawHeader['Keep-Alive']);
+    saveNewFingerprintToDatabase ('scan/connection.fdb', $implementation, $rawHeader['Connection']);
+    saveNewFingerprintToDatabase ('scan/cache-control.fdb', $implementation, $rawHeader['Cache-Control']);
+    saveNewFingerprintToDatabase ('scan/ua-pixels.fdb', $implementation, $rawHeader['UA-Pixels']);
+    saveNewFingerprintToDatabase ('scan/ua-color.fdb', $implementation, $rawHeader['UA-Color']);
+    saveNewFingerprintToDatabase ('scan/ua-os.fdb', $implementation, $rawHeader['UA-OS']);
+    saveNewFingerprintToDatabase ('scan/ua-cpu.fdb', $implementation, $rawHeader['UA-CPU']);
+    saveNewFingerprintToDatabase ('scan/te.fdb', $implementation, $rawHeader['TE']);
     saveNewFingerprintToDatabase ('scan/header-order.fdb', $implementation, getHeaderOrder($rawHeaders));
 }
 
