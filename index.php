@@ -1,10 +1,9 @@
 <?php
-
 // Include the browserrecon application
 include('inc_browserrecon.php');
 
 // Do the web browser fingerprinting
-$browser = browserRecon(getFullHeaders());
+$browser = browserRecon(getallheaders());
 
 if($_SERVER['QUERY_STRING'] == 'pic'){
     $font = 2;

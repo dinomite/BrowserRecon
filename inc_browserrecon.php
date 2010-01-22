@@ -46,107 +46,62 @@
 /**
  * Identify a browser
  *
- * @param   string  $rawHeader  The headers, as returned by getFullHeaders()
+ * @param   string  $rawHeaders  The headers, as returned by getallheaders()
  *
  * @return
  */
-function browserRecon($rawHeader, $mode='besthit', $database='') {
-    $globalFingerprint = identifyGlobalFingerprint($database, $rawHeader);
-    $possibilities = countHitPossibilities($rawHeader);
+function browserRecon($rawHeaders, $mode='besthit', $database='') {
+    $globalFingerprint = identifyGlobalFingerprint($database, $rawHeaders);
+    $possibilities = countHitPossibilities($rawHeaders);
     $matchStatistics = generateMatchStatistics($globalFingerprint, $mode, $possibilities);
 
     return announceFingerprintMatches($matchStatistics);
 }
 
 /**
- * Get all of the headers as a string:
- *      User-Agent: Foobar
- *      Referer:    http://google.com
- *
- * @return  string  The headers as colon separated key-value pairs, one per line
- */
-function getFullHeaders() {
-    $headers = getallheaders();
-
-    // Join the headers into a single string
-    foreach($headers as $header => $value) {
-        $full_header .= $header .': '. $value ."\n";
-    }
-
-    return $full_header;
-}
-
-/**
- * Get a header value from the raw headers.
- *
- * @param   string  $rawHeader  The headers, as returned by getFullHeaders()
- * @param   string  $headerName The desired header's name
- *
- * @return  string  The give header's value
- */
-function getHeaderValue ($rawHeader, $headerName) {
-    $headers = explode ("\n", $rawHeader, 64);
-    $headerNameSmall = strtolower($headerName);
-
-    // Return the header value
-    foreach($headers as $header) {
-        list($key, $value) = explode (':', $header, 2);
-        if (strtolower($key) == $headerNameSmall) {
-            return trim($value);
-        }
-    }
-}
-
-/**
  * Get a comma-separated list of header keys.
  *
- * @param   string  $rawHeader  The headers, as returned by getFullHeaders()
+ * @param   string  $rawHeaders  The headers, as returned by getallheaders()
  *
- * @return  string  The header keys as a comma-separated list
+ * @return  string  The header keys, in the order the browser delivered them,
+ *                  as a comma-separated list
  */
-function getHeaderOrder($rawHeader) {
-    $headers = explode ("\n", $rawHeader, 64);
-    $headers_count = count($headers);
+function getHeaderOrder($rawHeaders) {
+    $order = '';
 
-    for($i=0; $i<$headers_count; ++$i) {
-        list($key, $value) = explode (':', $header, 2);
+    foreach ($rawHeaders as $header) {
+        list($key, $value) = explode(':', $header, 2);
 
-        if (strlen($key) > 2) {
-            $header_order .= trim($key);
-
-            // If there is another header next, add a comma & space
-            if (strlen($headers[$i+1]) > 0) {
-                $header_order .= ', ';
-            }
-        }
+        $order .= $key . ', ';
     }
+    rtrim($order, ', ');
 
-    return $header_order;
+    return $order;
 }
 
 /**
  * Get the maximum number of hits that this browser can get, based upon the
  * number of headers that it provided which we know about.
  *
- * @param   string  $rawHeader  The headers, as returned by getFullHeaders()
+ * @param   string  $rawHeaders  The headers, as returned by getallheaders()
  *
  * @return  integer The count of hit possibilities
  */
-function countHitPossibilities($rawHeader) {
-    (getHeaderValue ($rawHeader, 'User-Agent') != '' ? ++$count : '');
-    (getHeaderValue ($rawHeader, 'Accept') != '' ? ++$count : '');
-    (getHeaderValue ($rawHeader, 'Accept-Language') != '' ? ++$count : '');
-    (getHeaderValue ($rawHeader, 'Accept-Encoding') != '' ? ++$count : '');
-    (getHeaderValue ($rawHeader, 'Accept-Charset') != '' ? ++$count : '');
-    (getHeaderValue ($rawHeader, 'Keep-Alive') != '' ? ++$count : '');
-    (getHeaderValue ($rawHeader, 'Connection') != '' ? ++$count : '');
-    (getHeaderValue ($rawHeader, 'Cache-Control') != '' ? ++$count : '');
-    (getHeaderValue ($rawHeader, 'UA-Pixels') != '' ? ++$count : '');
-    (getHeaderValue ($rawHeader, 'UA-Color') != '' ? ++$count : '');
-    (getHeaderValue ($rawHeader, 'UA-OS') != '' ? ++$count : '');
-    (getHeaderValue ($rawHeader, 'UA-CPU') != '' ? ++$count : '');
-    (getHeaderValue ($rawHeader, 'TE') != '' ? ++$count : '');
-    (getHeaderOrder($rawHeader) != '' ? ++$count : '');
+function countHitPossibilities($rawHeaders) {
+    array_key_exists('User-Agent', $rawHeaders) ? ++$count : '';
+    array_key_exists('Accept', $rawHeaders) ? ++$count : '';
+    array_key_exists('Accept-Language', $rawHeaders) ? ++$count : '';
+    array_key_exists('Accept-Encoding', $rawHeaders) ? ++$count : '';
+    array_key_exists('Accept-Charset', $rawHeaders) ? ++$count : '';
+    array_key_exists('Keep-Alive', $rawHeaders) ? ++$count : '';
+    array_key_exists('Connection', $rawHeaders) ? ++$count : '';
+    array_key_exists('Cache-Control', $rawHeaders) ? ++$count : '';
+    array_key_exists('UA-Pixels', $rawHeaders) ? ++$count : '';
+    array_key_exists('UA-Color', $rawHeaders) ? ++$count : '';
+    array_key_exists('UA-OS', $rawHeaders) ? ++$count : '';
+    array_key_exists('UA-CPU', $rawHeaders) ? ++$count : '';
+    array_key_exists('TE', $rawHeaders) ? ++$count : '';
+    getHeaderOrder($rawHeaders) != '' ? ++$count : '';
 
     return $count;
 }
@@ -155,25 +110,25 @@ function countHitPossibilities($rawHeader) {
  * Find each of the headers we care about in the databases.
  *
  * @param   string  $database   The database file prefix to use
- * @param   string  $rawHeader  The headers, as returned by getFullHeaders()
+ * @param   string  $rawHeaders  The headers, as returned by getFullHeaders()
  *
  * @return  string  Semicolon separated list of browsers that match
  */
-function identifyGlobalFingerprint($database, $rawHeader) {
-    $matchList = findMatchInDatabase ($database.'user-agent.fdb', getHeaderValue($rawHeader, 'User-Agent'));
-    $matchList .= findMatchInDatabase ($database.'accept.fdb', getHeaderValue($rawHeader, 'Accept'));
-    $matchList .= findMatchInDatabase ($database.'accept-language.fdb', getHeaderValue($rawHeader, 'Accept-Language'));
-    $matchList .= findMatchInDatabase ($database.'accept-encoding.fdb', getHeaderValue($rawHeader, 'Accept-Encoding'));
-    $matchList .= findMatchInDatabase ($database.'accept-charset.fdb', getHeaderValue($rawHeader, 'Accept-Charset'));
-    $matchList .= findMatchInDatabase ($database.'keep-alive.fdb', getHeaderValue($rawHeader, 'Keep-Alive'));
-    $matchList .= findMatchInDatabase ($database.'connection.fdb', getHeaderValue($rawHeader, 'Connection'));
-    $matchList .= findMatchInDatabase ($database.'cache-control.fdb', getHeaderValue($rawHeader, 'Cache-Control'));
-    $matchList .= findMatchInDatabase ($database.'ua-pixels.fdb', getHeaderValue($rawHeader, 'UA-Pixels'));
-    $matchList .= findMatchInDatabase ($database.'ua-color.fdb', getHeaderValue($rawHeader, 'UA-Color'));
-    $matchList .= findMatchInDatabase ($database.'ua-os.fdb', getHeaderValue($rawHeader, 'UA-OS'));
-    $matchList .= findMatchInDatabase ($database.'ua-cpu.fdb', getHeaderValue($rawHeader, 'UA-CPU'));
-    $matchList .= findMatchInDatabase ($database.'te.fdb', getHeaderValue($rawHeader, 'TE'));
-    $matchList .= findMatchInDatabase ($database.'header-order.fdb', getHeaderOrder($rawHeader));
+function identifyGlobalFingerprint($database, $rawHeaders) {
+    $matchList = findMatchInDatabase($database.'user-agent.fdb', $rawHeaders['User-Agent']);
+    $matchList .= findMatchInDatabase($database.'accept.fdb', $rawHeaders['Accept']);
+    $matchList .= findMatchInDatabase($database.'accept-language.fdb', $rawHeaders['Accept-Language']);
+    $matchList .= findMatchInDatabase($database.'accept-encoding.fdb', $rawHeaders['Accept-Encoding']);
+    $matchList .= findMatchInDatabase($database.'accept-charset.fdb', $rawHeaders['Accept-Charset']);
+    $matchList .= findMatchInDatabase($database.'keep-alive.fdb', $rawHeaders['Keep-Alive']);
+    $matchList .= findMatchInDatabase($database.'connection.fdb', $rawHeaders['Connection']);
+    $matchList .= findMatchInDatabase($database.'cache-control.fdb', $rawHeaders['Cache-Control']);
+    $matchList .= findMatchInDatabase($database.'ua-pixels.fdb', $rawHeaders['UA-Pixels']);
+    $matchList .= findMatchInDatabase($database.'ua-color.fdb', $rawHeaders['UA-Color']);
+    $matchList .= findMatchInDatabase($database.'ua-os.fdb', $rawHeaders['UA-OS']);
+    $matchList .= findMatchInDatabase($database.'ua-cpu.fdb', $rawHeaders['UA-CPU']);
+    $matchList .= findMatchInDatabase($database.'te.fdb', $rawHeaders['TE']);
+    $matchList .= findMatchInDatabase($database.'header-order.fdb', getHeaderOrder($rawHeaders));
 
     return $matchList;
 }
@@ -338,21 +293,21 @@ function sendFingerprint($implementation, $fingerprint, $details='') {
     mail('marc.ruef@computec.ch', '[browserrecon] fingerprint upload', $mailmessage);
 }
 
-function saveAllFingerprintsToDatabase ($rawHeader, $implementation) {
-    saveNewFingerprintToDatabase ('scan/user-agent.fdb', $implementation, getHeaderValue($rawHeader, 'User-Agent'));
-    saveNewFingerprintToDatabase ('scan/accept.fdb', $implementation, getHeaderValue($rawHeader, 'Accept'));
-    saveNewFingerprintToDatabase ('scan/accept-language.fdb', $implementation, getHeaderValue($rawHeader, 'Accept-Language'));
-    saveNewFingerprintToDatabase ('scan/accept-encoding.fdb', $implementation, getHeaderValue($rawHeader, 'Accept-Encoding'));
-    saveNewFingerprintToDatabase ('scan/accept-charset.fdb', $implementation, getHeaderValue($rawHeader, 'Accept-Charset'));
-    saveNewFingerprintToDatabase ('scan/keep-alive.fdb', $implementation, getHeaderValue($rawHeader, 'Keep-Alive'));
-    saveNewFingerprintToDatabase ('scan/connection.fdb', $implementation, getHeaderValue($rawHeader, 'Connection'));
-    saveNewFingerprintToDatabase ('scan/cache-control.fdb', $implementation, getHeaderValue($rawHeader, 'Cache-Control'));
-    saveNewFingerprintToDatabase ('scan/ua-pixels.fdb', $implementation, getHeaderValue($rawHeader, 'UA-Pixels'));
-    saveNewFingerprintToDatabase ('scan/ua-color.fdb', $implementation, getHeaderValue($rawHeader, 'UA-Color'));
-    saveNewFingerprintToDatabase ('scan/ua-os.fdb', $implementation, getHeaderValue($rawHeader, 'UA-OS'));
-    saveNewFingerprintToDatabase ('scan/ua-cpu.fdb', $implementation, getHeaderValue($rawHeader, 'UA-CPU'));
-    saveNewFingerprintToDatabase ('scan/te.fdb', $implementation, getHeaderValue($rawHeader, 'TE'));
-    saveNewFingerprintToDatabase ('scan/header-order.fdb', $implementation, getHeaderOrder($rawHeader));
+function saveAllFingerprintsToDatabase ($rawHeaders, $implementation) {
+    saveNewFingerprintToDatabase ('scan/user-agent.fdb', $implementation, getHeaderValue($rawHeaders, 'User-Agent'));
+    saveNewFingerprintToDatabase ('scan/accept.fdb', $implementation, getHeaderValue($rawHeaders, 'Accept'));
+    saveNewFingerprintToDatabase ('scan/accept-language.fdb', $implementation, getHeaderValue($rawHeaders, 'Accept-Language'));
+    saveNewFingerprintToDatabase ('scan/accept-encoding.fdb', $implementation, getHeaderValue($rawHeaders, 'Accept-Encoding'));
+    saveNewFingerprintToDatabase ('scan/accept-charset.fdb', $implementation, getHeaderValue($rawHeaders, 'Accept-Charset'));
+    saveNewFingerprintToDatabase ('scan/keep-alive.fdb', $implementation, getHeaderValue($rawHeaders, 'Keep-Alive'));
+    saveNewFingerprintToDatabase ('scan/connection.fdb', $implementation, getHeaderValue($rawHeaders, 'Connection'));
+    saveNewFingerprintToDatabase ('scan/cache-control.fdb', $implementation, getHeaderValue($rawHeaders, 'Cache-Control'));
+    saveNewFingerprintToDatabase ('scan/ua-pixels.fdb', $implementation, getHeaderValue($rawHeaders, 'UA-Pixels'));
+    saveNewFingerprintToDatabase ('scan/ua-color.fdb', $implementation, getHeaderValue($rawHeaders, 'UA-Color'));
+    saveNewFingerprintToDatabase ('scan/ua-os.fdb', $implementation, getHeaderValue($rawHeaders, 'UA-OS'));
+    saveNewFingerprintToDatabase ('scan/ua-cpu.fdb', $implementation, getHeaderValue($rawHeaders, 'UA-CPU'));
+    saveNewFingerprintToDatabase ('scan/te.fdb', $implementation, getHeaderValue($rawHeaders, 'TE'));
+    saveNewFingerprintToDatabase ('scan/header-order.fdb', $implementation, getHeaderOrder($rawHeaders));
 }
 
 function saveNewFingerprintToDatabase ($filename, $implementation, $value) {
