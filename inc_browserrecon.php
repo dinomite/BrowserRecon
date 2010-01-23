@@ -148,10 +148,9 @@ function findMatchInDatabase ($databaseFile, $headerValue) {
         // Lines are "Browser name;header value"
         list($dbBrowser, $dbValue) = explode(';', $entry, 2);
 
-        if ($headerValue == rtrim($dbValue)) {
-            // Append this browser name to the matches
+        // Append this browser name to the matches
+        if ($headerValue == rtrim($dbValue))
             $matches[] = $dbBrowser;
-        }
     }
 
     return $matches;
@@ -165,7 +164,7 @@ function findMatchInDatabase ($databaseFile, $headerValue) {
 function generateMatchStatistics($matches) {
     $uniqueMatches = array_unique($matches);
 
-    foreach($uniqueMatches as $match) {
+    foreach ($uniqueMatches as $match) {
         $matchStatistic .= $match .'='. countif($matches, $match) ."\n";
     }
 
@@ -181,10 +180,9 @@ function generateMatchStatistics($matches) {
  * @return  integer The number of times $search was found in $input
  */
 function countif($input, $search) {
-    foreach($input as $entry) {
-        if ($entry == $search) {
-            ++$sum;
-        }
+    foreach ($input as $entry) {
+        if ($entry == $search)
+            $sum++;
     }
 
     return $sum;
@@ -268,6 +266,7 @@ function combineArrays($one, $two) {
 
 //////////////  ONLY USED FOR ADDING FINGERPRINTS  ////////////////
 function addToDatabase ($databaseFile, $implementation, $value) {
+    print "addToDB-dbFile: $databaseFile; impl: $implementation; value: $value<br>\n";
     if (strlen($implementation) && strlen($value)) {
         if (!isindatabase($databaseFile, $implementation, $value)) {
             if (is_writable($databaseFile)) {
@@ -292,34 +291,25 @@ function isInDatabase ($databaseFile, $implementation, $value) {
     return 0;
 }
 
-// Save Fingerprints
-function sendFingerprint($implementation, $fingerprint, $details='') {
-    $mailmessage = 'Implementation: '.$implementation."\n\n";
-    if ($details) {
-        $mailmessage.= $details."\n\n";
-    }
-    $mailmessage.= $fingerprint."\n";
-    mail('marc.ruef@computec.ch', '[browserrecon] fingerprint upload', $mailmessage);
-}
-
 function saveAllFingerprintsToDatabase ($rawHeaders, $implementation) {
-    saveNewFingerprintToDatabase ('scan/user-agent.fdb', $implementation, $rawHeader['User-Agent']);
-    saveNewFingerprintToDatabase ('scan/accept.fdb', $implementation, $rawHeader['Accept']);
-    saveNewFingerprintToDatabase ('scan/accept-language.fdb', $implementation, $rawHeader['Accept-Language']);
-    saveNewFingerprintToDatabase ('scan/accept-encoding.fdb', $implementation, $rawHeader['Accept-Encoding']);
-    saveNewFingerprintToDatabase ('scan/accept-charset.fdb', $implementation, $rawHeader['Accept-Charset']);
-    saveNewFingerprintToDatabase ('scan/keep-alive.fdb', $implementation, $rawHeader['Keep-Alive']);
-    saveNewFingerprintToDatabase ('scan/connection.fdb', $implementation, $rawHeader['Connection']);
-    saveNewFingerprintToDatabase ('scan/cache-control.fdb', $implementation, $rawHeader['Cache-Control']);
-    saveNewFingerprintToDatabase ('scan/ua-pixels.fdb', $implementation, $rawHeader['UA-Pixels']);
-    saveNewFingerprintToDatabase ('scan/ua-color.fdb', $implementation, $rawHeader['UA-Color']);
-    saveNewFingerprintToDatabase ('scan/ua-os.fdb', $implementation, $rawHeader['UA-OS']);
-    saveNewFingerprintToDatabase ('scan/ua-cpu.fdb', $implementation, $rawHeader['UA-CPU']);
-    saveNewFingerprintToDatabase ('scan/te.fdb', $implementation, $rawHeader['TE']);
-    saveNewFingerprintToDatabase ('scan/header-order.fdb', $implementation, getHeaderOrder($rawHeaders));
+    saveNewFingerprintToDatabase ('user-agent.fdb', $implementation, $rawHeaders['User-Agent']);
+    saveNewFingerprintToDatabase ('accept.fdb', $implementation, $rawHeaders['Accept']);
+    saveNewFingerprintToDatabase ('accept-language.fdb', $implementation, $rawHeaders['Accept-Language']);
+    saveNewFingerprintToDatabase ('accept-encoding.fdb', $implementation, $rawHeaders['Accept-Encoding']);
+    saveNewFingerprintToDatabase ('accept-charset.fdb', $implementation, $rawHeaders['Accept-Charset']);
+    saveNewFingerprintToDatabase ('keep-alive.fdb', $implementation, $rawHeaders['Keep-Alive']);
+    saveNewFingerprintToDatabase ('connection.fdb', $implementation, $rawHeaders['Connection']);
+    saveNewFingerprintToDatabase ('cache-control.fdb', $implementation, $rawHeaders['Cache-Control']);
+    saveNewFingerprintToDatabase ('ua-pixels.fdb', $implementation, $rawHeaders['UA-Pixels']);
+    saveNewFingerprintToDatabase ('ua-color.fdb', $implementation, $rawHeaders['UA-Color']);
+    saveNewFingerprintToDatabase ('ua-os.fdb', $implementation, $rawHeaders['UA-OS']);
+    saveNewFingerprintToDatabase ('ua-cpu.fdb', $implementation, $rawHeaders['UA-CPU']);
+    saveNewFingerprintToDatabase ('te.fdb', $implementation, $rawHeaders['TE']);
+    saveNewFingerprintToDatabase ('header-order.fdb', $implementation, getHeaderOrder($rawHeaders));
 }
 
 function saveNewFingerprintToDatabase ($filename, $implementation, $value) {
+    print "SNFTD\n";
     addToDatabase ($filename, $implementation, $value);
 }
 
@@ -362,5 +352,4 @@ function identifyProxy($request) {
         return 'no proxy used';
     }
 }
-
 ?>

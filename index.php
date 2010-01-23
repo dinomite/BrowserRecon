@@ -2,12 +2,16 @@
 // Include the browserrecon application
 include('inc_browserrecon.php');
 
+$rawHeaders = getallheaders();
+
 echo "<html><body>\n";
-echo browserRecon(getallHeaders(), 'besthitdetail');
+echo browserRecon($rawHeaders, 'besthitdetail');
 echo "\n<hr>\n";
-echo browserRecon(getallHeaders(), 'besthitlist');
+echo browserRecon($rawHeaders, 'besthitlist');
 echo "\n<hr>\n";
-echo browserRecon(getallHeaders(), 'list');
+echo browserRecon($rawHeaders, 'list');
+
+saveAllFingerprintsToDatabase($rawHeaders, 'Mozilla Firefox 3.5.7 Mac OS 10.5.3');
 echo "\n</body></html>\n";
 
 /*
