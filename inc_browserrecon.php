@@ -309,7 +309,6 @@ function saveAllFingerprintsToDatabase ($rawHeaders, $implementation) {
 }
 
 function saveNewFingerprintToDatabase ($filename, $implementation, $value) {
-    print "SNFTD\n";
     addToDatabase ($filename, $implementation, $value);
 }
 

@@ -125,3 +125,6 @@ Ayell Euronet Eurobot 1.0;x-gzip, gzip
 SimplePie 1.0.1;deflate, gzip
 Mozilla Firefox 1.5.0.7;gzip,deflate
 Mozilla Firefox 3.5.7 Mac OS 10.5.3;gzip,deflate
+Mozilla Firefox 3.6 Mac OS X 10.6;gzip,deflate
+Safari 4.0.4 Mac OS X 10.6;gzip, deflate
+Chrome 4.0.302.2 dev Mac OS X 10.6;gzip,deflate,sdch

@@ -414,3 +414,6 @@ SimplePie 1.0.1;SimplePie/1.0.1 (Feed Parser; http://simplepie.org/; Allow like 
 Mozilla Firefox 2.0.0.12;Mozilla/5.0 (X11; U; Linux i686; de; rv:1.8.1.12) Gecko/20080201 Firefox/2.0.0.12
 Mozilla Firefox 1.5.0.7;Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.0.7) Gecko/20061011 Fedora/1.5.0.7-7.fc6 Firefox/1.5.0.7
 Mozilla Firefox 3.5.7 Mac OS 10.5.3;Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7
+Mozilla Firefox 3.6 Mac OS X 10.6;Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6
+Safari 4.0.4 Mac OS X 10.6;Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_2; en-us) AppleWebKit/531.21.8 (KHTML, like Gecko) Version/4.0.4 Safari/531.21.10
+Chrome 4.0.302.2 dev Mac OS X 10.6;Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_2; en-US) AppleWebKit/532.8 (KHTML, like Gecko) Chrome/4.0.302.2 Safari/532.8
