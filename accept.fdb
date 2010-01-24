@@ -191,7 +191,7 @@ RealMedia Analyzer 1.0;*/*
 SonyEricsson K750i;application/vnd.wap.xhtml+xml, application/vnd.wap.wmlc, application/xhtml+xml, image/gif, */*,text/vnd.wap.wml;q=0.125
 SimplePie 1.0.1;*/*
 Mozilla Firefox 1.5.0.7;text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
-Mozilla Firefox 3.5.7 Mac OS 10.5.3;text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Mozilla Firefox 3.5.7 Mac OS X 10.5;text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
 Mozilla Firefox 3.6 Mac OS X 10.6;text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
 Safari 4.0.4 Mac OS X 10.6;application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
 Chrome 4.0.302.2 dev Mac OS X 10.6;application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
